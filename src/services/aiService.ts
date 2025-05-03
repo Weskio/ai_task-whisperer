@@ -1,6 +1,3 @@
-
-// This service connects to OpenAI API to generate task suggestions based on task titles
-
 interface OpenAIResponse {
   choices: {
     message: {
@@ -11,17 +8,14 @@ interface OpenAIResponse {
 
 const API_KEY_STORAGE_KEY = 'openai_api_key';
 
-// Helper function to get the stored API key
 const getApiKey = (): string | null => {
   return localStorage.getItem(API_KEY_STORAGE_KEY);
 };
 
-// Helper function to save API key to storage
 export const saveApiKey = (apiKey: string): void => {
   localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
 };
 
-// Get suggestions from OpenAI's API
 async function getOpenAISuggestions(taskTitle: string, apiKey: string): Promise<string[]> {
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -58,19 +52,17 @@ async function getOpenAISuggestions(taskTitle: string, apiKey: string): Promise<
       throw new Error('No suggestions received from API');
     }
     
-    // Parse the response into individual suggestions
     return content
       .split('\n')
       .filter(line => line.trim().length > 0)
       .map(line => line.replace(/^[0-9-.\s]*/, '').trim())
-      .slice(0, 4); // Limit to 4 suggestions
+      .slice(0, 4);
   } catch (error) {
     console.error('Error getting suggestions from OpenAI:', error);
     throw error;
   }
 }
 
-// Fallback suggestions if API call fails or no API key is available
 const getFallbackSuggestions = (taskTitle: string): string[] => {
   const cleanTitle = taskTitle.toLowerCase();
   
@@ -119,7 +111,6 @@ const getFallbackSuggestions = (taskTitle: string): string[] => {
     ];
   }
   
-  // Default suggestions
   return [
     "Break the task into smaller steps",
     "Set a specific deadline",
@@ -133,19 +124,16 @@ export const generateTaskSuggestions = async (taskTitle: string): Promise<string
   
   const apiKey = getApiKey();
   
-  // Use fallback suggestions if no API key is available
   if (!apiKey) {
     console.log('No API key found, using fallback suggestions');
     return getFallbackSuggestions(taskTitle);
   }
   
   try {
-    // Try to get suggestions from OpenAI
     const suggestions = await getOpenAISuggestions(taskTitle, apiKey);
     return suggestions;
   } catch (error) {
     console.error('Error generating suggestions with AI API, using fallback:', error);
-    // Fallback to predefined suggestions if API call fails
     return getFallbackSuggestions(taskTitle);
   }
 };
