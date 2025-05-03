@@ -37,7 +37,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask,
         title: title.trim(),
         priority,
         column: 'todo',
-        subtasks: [], // Added the missing subtasks property
+        subtasks: [], 
       });
       setTitle('');
       setPriority('medium');

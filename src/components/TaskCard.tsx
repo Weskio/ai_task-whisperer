@@ -71,10 +71,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [newSubtask, setNewSubtask] = useState('');
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
 
-  // Ensure subtasks is an array before calculating progress
   const subtasks = task.subtasks || [];
   
-  // Calculate progress based on completed subtasks
   const completedSubtasks = subtasks.filter(subtask => subtask.completed).length;
   const progressPercentage = subtasks.length > 0 
     ? Math.round((completedSubtasks / subtasks.length) * 100) 

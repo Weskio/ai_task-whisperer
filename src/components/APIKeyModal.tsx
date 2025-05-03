@@ -28,7 +28,6 @@ const APIKeyModal: React.FC<APIKeyModalProps> = ({ isOpen, onClose }) => {
     
     try {
       if (apiKey.trim()) {
-        // Save the API key
         saveApiKey(apiKey.trim());
         toast.success('API key saved successfully');
         setApiKey('');
