@@ -1,31 +1,34 @@
-
-import React, { useState, useEffect } from 'react';
-import { Plus, Key } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import TaskColumn from '@/components/TaskColumn';
-import AddTaskModal from '@/components/AddTaskModal';
-import APIKeyModal from '@/components/APIKeyModal';
-import { Task } from '@/components/TaskCard';
-import { useTasks } from '@/hooks/useTasks';
+import React, { useState, useEffect } from "react";
+import { Plus, Key } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import TaskColumn from "@/components/TaskColumn";
+import AddTaskModal from "@/components/AddTaskModal";
+import APIKeyModal from "@/components/APIKeyModal";
+import { Task } from "@/components/TaskCard";
+import { useTasks } from "@/hooks/useTasks";
 
 const Index = () => {
-  const { 
-    tasks, 
-    loading, 
-    modalOpen, 
-    setModalOpen, 
-    addTask, 
-    moveTask, 
+  const {
+    tasks,
+    loading,
+    modalOpen,
+    setModalOpen,
+    addTask,
+    moveTask,
+    deleteTask,
     editTask,
     addSubtask,
-    toggleSubtask 
+    toggleSubtask,
+    editSubtask,
+    deleteSubtask,
+    regenerateAiSuggestions,
   } = useTasks();
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState<boolean>(false);
   const [hasApiKey, setHasApiKey] = useState<boolean>(false);
 
   useEffect(() => {
-    const apiKey = localStorage.getItem('groq_api_key');
+    const apiKey = localStorage.getItem("groq_api_key");
     setHasApiKey(!!apiKey);
   }, [apiKeyModalOpen]);
 
@@ -40,15 +43,15 @@ const Index = () => {
   const handleDrop = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
     if (draggedTask) {
-      moveTask(draggedTask.id, columnId as 'todo' | 'inProgress' | 'done');
+      moveTask(draggedTask.id, columnId as "todo" | "inProgress" | "done");
       setDraggedTask(null);
     }
   };
 
   // Filter tasks by column
-  const todoTasks = tasks.filter(task => task.column === 'todo');
-  const inProgressTasks = tasks.filter(task => task.column === 'inProgress');
-  const doneTasks = tasks.filter(task => task.column === 'done');
+  const todoTasks = tasks.filter((task) => task.column === "todo");
+  const inProgressTasks = tasks.filter((task) => task.column === "inProgress");
+  const doneTasks = tasks.filter((task) => task.column === "done");
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
@@ -56,19 +59,23 @@ const Index = () => {
         <header className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">AI Task whisperer</h1>
+              <h1 className="text-3xl font-bold">TaskForge AI</h1>
               <p className="text-muted-foreground mt-1">
                 AI-powered task management
               </p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => setApiKeyModalOpen(true)}
-                title={hasApiKey ? "API Key Configured" : "Set OpenAI API Key"}
+                title={
+                  hasApiKey ? "Groq API Key Configured" : "Set Groq API Key"
+                }
               >
-                <Key className={`h-4 w-4 ${hasApiKey ? "text-green-500" : ""}`} />
+                <Key
+                  className={`h-4 w-4 ${hasApiKey ? "text-green-500" : ""}`}
+                />
               </Button>
               <Button onClick={() => setModalOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Add Task
@@ -88,8 +95,13 @@ const Index = () => {
             onEditTask={editTask}
             onToggleSubtask={toggleSubtask}
             onAddSubtask={addSubtask}
+            onEditSubtask={editSubtask}
+            onDeleteSubtask={deleteSubtask}
+            onDeleteTask={deleteTask}
+            onMoveTask={moveTask}
+            onRegenerateAiSuggestions={regenerateAiSuggestions}
           />
-          
+
           <TaskColumn
             title="In Progress"
             tasks={inProgressTasks}
@@ -100,8 +112,13 @@ const Index = () => {
             onEditTask={editTask}
             onToggleSubtask={toggleSubtask}
             onAddSubtask={addSubtask}
+            onEditSubtask={editSubtask}
+            onDeleteSubtask={deleteSubtask}
+            onDeleteTask={deleteTask}
+            onMoveTask={moveTask}
+            onRegenerateAiSuggestions={regenerateAiSuggestions}
           />
-          
+
           <TaskColumn
             title="Done"
             tasks={doneTasks}
@@ -112,6 +129,11 @@ const Index = () => {
             onEditTask={editTask}
             onToggleSubtask={toggleSubtask}
             onAddSubtask={addSubtask}
+            onEditSubtask={editSubtask}
+            onDeleteSubtask={deleteSubtask}
+            onDeleteTask={deleteTask}
+            onMoveTask={moveTask}
+            onRegenerateAiSuggestions={regenerateAiSuggestions}
           />
         </div>
 
@@ -122,7 +144,7 @@ const Index = () => {
           isLoading={loading}
         />
 
-        <APIKeyModal 
+        <APIKeyModal
           isOpen={apiKeyModalOpen}
           onClose={() => setApiKeyModalOpen(false)}
         />
