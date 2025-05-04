@@ -1,17 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Sparkle, Tag, Pen, ListCheck, CheckCircle, CircleGauge, Trash, Move, RefreshCw } from 'lucide-react';
+import { Sparkle, Tag, Pen, ListCheck, CircleGauge, Trash, Move, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -116,10 +109,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
 
-  // Ensure subtasks is an array before calculating progress
   const subtasks = task.subtasks || [];
   
-  // Calculate progress based on completed subtasks
   const completedSubtasks = subtasks.filter(subtask => subtask.completed).length;
   const progressPercentage = subtasks.length > 0 
     ? Math.round((completedSubtasks / subtasks.length) * 100) 

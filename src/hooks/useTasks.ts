@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Task, SubTask } from '@/components/TaskCard';
+import { Task } from '@/components/TaskCard';
 import { generateTaskSuggestions } from '@/services/aiService';
 import { toast } from 'sonner';
 
