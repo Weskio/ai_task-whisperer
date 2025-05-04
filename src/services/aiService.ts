@@ -1,4 +1,4 @@
-interface OpenAIResponse {
+interface GroqResponse {
   choices: {
     message: {
       content: string;
@@ -6,7 +6,7 @@ interface OpenAIResponse {
   }[];
 }
 
-const API_KEY_STORAGE_KEY = 'openai_api_key';
+const API_KEY_STORAGE_KEY = 'groq_api_key';
 
 const getApiKey = (): string | null => {
   return localStorage.getItem(API_KEY_STORAGE_KEY);
@@ -18,14 +18,14 @@ export const saveApiKey = (apiKey: string): void => {
 
 async function getOpenAISuggestions(taskTitle: string, apiKey: string): Promise<string[]> {
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'llama3-8b-8192',
         messages: [
           {
             role: 'system',
@@ -45,7 +45,7 @@ async function getOpenAISuggestions(taskTitle: string, apiKey: string): Promise<
       throw new Error(`API request failed: ${response.status}`);
     }
 
-    const data: OpenAIResponse = await response.json();
+    const data: GroqResponse = await response.json();
     const content = data.choices[0]?.message?.content;
     
     if (!content) {

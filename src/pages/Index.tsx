@@ -24,9 +24,8 @@ const Index = () => {
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState<boolean>(false);
   const [hasApiKey, setHasApiKey] = useState<boolean>(false);
 
-  // Check if API key is stored
   useEffect(() => {
-    const apiKey = localStorage.getItem('openai_api_key');
+    const apiKey = localStorage.getItem('groq_api_key');
     setHasApiKey(!!apiKey);
   }, [apiKeyModalOpen]);
 
