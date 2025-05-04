@@ -59,7 +59,7 @@ const Index = () => {
         <header className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">TaskForge AI</h1>
+              <h1 className="text-3xl font-bold">AI Task Whisperer</h1>
               <p className="text-muted-foreground mt-1">
                 AI-powered task management
               </p>
