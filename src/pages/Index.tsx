@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Key } from "lucide-react";
+import { Plus, Key, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TaskColumn from "@/components/TaskColumn";
 import AddTaskModal from "@/components/AddTaskModal";
+import AddRecurringTaskModal from "@/components/AddRecurringTaskModal";
 import APIKeyModal from "@/components/APIKeyModal";
+import StreakTracker from "@/components/StreakTracker";
 import { Task } from "@/components/TaskCard";
 import { useTasks } from "@/hooks/useTasks";
 
@@ -13,6 +15,9 @@ const Index = () => {
     loading,
     modalOpen,
     setModalOpen,
+    recurringModalOpen,
+    setRecurringModalOpen,
+    streakData,
     addTask,
     moveTask,
     deleteTask,
@@ -27,6 +32,7 @@ const Index = () => {
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState<boolean>(false);
   const [hasApiKey, setHasApiKey] = useState<boolean>(false);
 
+  // Check if API key is stored
   useEffect(() => {
     const apiKey = localStorage.getItem("groq_api_key");
     setHasApiKey(!!apiKey);
@@ -77,12 +83,29 @@ const Index = () => {
                   className={`h-4 w-4 ${hasApiKey ? "text-green-500" : ""}`}
                 />
               </Button>
-              <Button onClick={() => setModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" /> Add Task
+              <Button
+                variant="outline"
+                onClick={() => setRecurringModalOpen(true)}
+                title="Add Recurring Task"
+                className="gap-2"
+              >
+                <Repeat className="h-4 w-4" />
+                Add Recurring
+              </Button>
+              <Button onClick={() => setModalOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" /> Add Task
               </Button>
             </div>
           </div>
         </header>
+
+        {/* Streak Tracker */}
+        <div className="mb-8">
+          <StreakTracker
+            completedDates={streakData.completedDates}
+            currentStreak={streakData.currentStreak}
+          />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TaskColumn
@@ -140,6 +163,13 @@ const Index = () => {
         <AddTaskModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
+          onAddTask={addTask}
+          isLoading={loading}
+        />
+
+        <AddRecurringTaskModal
+          isOpen={recurringModalOpen}
+          onClose={() => setRecurringModalOpen(false)}
           onAddTask={addTask}
           isLoading={loading}
         />

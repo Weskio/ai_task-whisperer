@@ -1,10 +1,18 @@
+
 import React, { useState, useRef } from 'react';
-import { Sparkle, Tag, Pen, ListCheck, CircleGauge, Trash, Move, RefreshCw } from 'lucide-react';
+import { Sparkle, Tag, Pen, ListCheck, CheckCircle, CircleGauge, Trash, Move, RefreshCw, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -42,6 +50,8 @@ export interface Task {
   aiSuggestions: string[];
   column: 'todo' | 'inProgress' | 'done';
   subtasks: SubTask[];
+  isRecurring?: boolean;
+  lastCompletedAt?: string | null;
 }
 
 interface TaskCardProps {
@@ -109,8 +119,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
 
+  // Ensure subtasks is an array before calculating progress
   const subtasks = task.subtasks || [];
   
+  // Calculate progress based on completed subtasks
   const completedSubtasks = subtasks.filter(subtask => subtask.completed).length;
   const progressPercentage = subtasks.length > 0 
     ? Math.round((completedSubtasks / subtasks.length) * 100) 
@@ -192,7 +204,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </div>
             ) : (
               <>
-                <h3 className="font-medium text-foreground">{task.title}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-foreground">{task.title}</h3>
+                  {task.isRecurring && (
+                    <Repeat className="h-4 w-4 text-primary" aria-label="Recurring Task" />
+                  )}
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm"
