@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { Task, SubTask } from '@/components/TaskCard';
+import { Task, SubTask } from '@/types';
 import { generateTaskSuggestions } from '@/services/aiService';
 import { toast } from 'sonner';
 import { format, isToday, parseISO, differenceInCalendarDays } from 'date-fns';
 
+// Load tasks from localStorage if available
 const loadTasks = (): Task[] => {
   const saved = localStorage.getItem('tasks');
   if (saved) {
@@ -15,9 +16,11 @@ const loadTasks = (): Task[] => {
     }
   }
   
+  // Default tasks if none exist
   return [];
 };
 
+// Load streak data from localStorage if available
 const loadStreakData = (): { completedDates: string[], lastCompletedDate: string | null } => {
   const saved = localStorage.getItem('streak_data');
   if (saved) {
@@ -28,6 +31,7 @@ const loadStreakData = (): { completedDates: string[], lastCompletedDate: string
     }
   }
   
+  // Default streak data if none exists
   return { completedDates: [], lastCompletedDate: null };
 };
 
@@ -39,10 +43,12 @@ export const useTasks = () => {
   const [streakData, setStreakData] = useState(loadStreakData());
   const [currentStreak, setCurrentStreak] = useState<number>(0);
 
+  // Save tasks to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
 
+  // Save streak data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('streak_data', JSON.stringify(streakData));
   }, [streakData]);
@@ -92,7 +98,7 @@ export const useTasks = () => {
         let updated = false;
         
         const updatedTasks = prevTasks.map(task => {
-          if (task.isRecurring && task.column === 'done' && task.lastCompletedAt) {
+          if (task.isRecurring && task.columnId && task.columnId.includes('done') && task.lastCompletedAt) {
             const completionDate = task.lastCompletedAt.split('T')[0]; // Get just the date part
             
             // If the task was completed on a previous day, move it back to todo
@@ -100,7 +106,7 @@ export const useTasks = () => {
               updated = true;
               return {
                 ...task,
-                column: 'todo' as const, // Use a const assertion to ensure type safety
+                columnId: 'todo', // Move back to first column
                 // Reset subtasks completion if any
                 subtasks: task.subtasks.map(subtask => ({
                   ...subtask,
@@ -150,7 +156,9 @@ export const useTasks = () => {
         title: taskData.title,
         priority: taskData.priority,
         aiSuggestions: suggestions || [], // Ensure we handle if suggestions is undefined
-        column: 'todo',
+        columnId: taskData.columnId,
+        spaceId: taskData.spaceId,
+        order: taskData.order || 0,
         subtasks: taskData.subtasks || [], // Ensure we use provided subtasks or default to empty array
         isRecurring: taskData.isRecurring || false,
         lastCompletedAt: null
@@ -195,7 +203,7 @@ export const useTasks = () => {
       // Check if all recurring tasks for today are completed
       const recurringTasks = tasks.filter(t => t.isRecurring);
       const completedRecurringTasks = recurringTasks.filter(t => 
-        t.column === 'done' || (t.id === taskId && targetColumn === 'done')
+        (t.columnId && t.columnId.includes('done')) || (t.id === taskId && targetColumn === 'done')
       );
       
       const allRecurringTasksCompleted = 

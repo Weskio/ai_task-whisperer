@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Sparkle, Tag, Pen, ListCheck, CheckCircle, CircleGauge, Trash, Move, RefreshCw, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -6,13 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -34,25 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-export type Priority = 'high' | 'medium' | 'low';
-
-export interface SubTask {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
-export interface Task {
-  id: string;
-  title: string;
-  priority: Priority;
-  aiSuggestions: string[];
-  column: 'todo' | 'inProgress' | 'done';
-  subtasks: SubTask[];
-  isRecurring?: boolean;
-  lastCompletedAt?: string | null;
-}
+import { Task, Priority, SubTask } from '@/types';
 
 interface TaskCardProps {
   task: Task;
@@ -63,7 +37,7 @@ interface TaskCardProps {
   onEditSubtask?: (taskId: string, subtaskId: string, title: string) => void;
   onDeleteSubtask?: (taskId: string, subtaskId: string) => void;
   onDeleteTask?: (taskId: string) => void;
-  onMoveTask?: (taskId: string, column: 'todo' | 'inProgress' | 'done') => void;
+  onMoveTask?: (taskId: string, columnId: string, newOrder?: number) => void;
   onRegenerateAiSuggestions?: (taskId: string) => void;
 }
 
@@ -115,14 +89,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [editingSubtaskTitle, setEditingSubtaskTitle] = useState('');
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
   
-  // References for focus management
   const titleInputRef = useRef<HTMLInputElement>(null);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
 
-  // Ensure subtasks is an array before calculating progress
   const subtasks = task.subtasks || [];
-  
-  // Calculate progress based on completed subtasks
   const completedSubtasks = subtasks.filter(subtask => subtask.completed).length;
   const progressPercentage = subtasks.length > 0 
     ? Math.round((completedSubtasks / subtasks.length) * 100) 
@@ -178,7 +148,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     <ContextMenu>
       <ContextMenuTrigger>
         <div 
-          className="task-card mb-3 w-full"
+          className="task-card mb-3 w-full bg-card border border-border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
           draggable={!isEditing && !isAddingSubtask && editingSubtaskId === null}
           onDragStart={(e) => !isEditing && !isAddingSubtask && onDragStart(e, task)}
         >
@@ -207,7 +177,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium text-foreground">{task.title}</h3>
                   {task.isRecurring && (
-                    <Repeat className="h-4 w-4 text-primary" aria-label="Recurring Task" />
+                    <Repeat className="h-4 w-4 text-primary" />
                   )}
                 </div>
                 <Button 
@@ -217,7 +187,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   onClick={() => setIsEditing(true)}
                 >
                   <Pen className="h-4 w-4" />
-                  <span className="sr-only">Edit task</span>
                 </Button>
               </>
             )}
@@ -326,7 +295,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                               onClick={() => handleStartEditSubtask(subtask)}
                             >
                               <Pen className="h-3 w-3" />
-                              <span className="sr-only">Edit subtask</span>
                             </Button>
                             {onDeleteSubtask && (
                               <Button 
@@ -336,7 +304,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                                 onClick={() => onDeleteSubtask(task.id, subtask.id)}
                               >
                                 <Trash className="h-3 w-3" />
-                                <span className="sr-only">Delete subtask</span>
                               </Button>
                             )}
                           </div>
@@ -447,38 +414,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         )}
         
         <ContextMenuSeparator />
-        
-        {onMoveTask && (
-          <ContextMenuSub>
-            <ContextMenuSubTrigger className="flex items-center gap-2">
-              <Move className="h-4 w-4" />
-              Move To
-            </ContextMenuSubTrigger>
-            <ContextMenuSubContent className="w-48">
-              <ContextMenuItem 
-                className="flex items-center gap-2"
-                onClick={() => onMoveTask(task.id, 'todo')}
-                disabled={task.column === 'todo'}
-              >
-                To Do
-              </ContextMenuItem>
-              <ContextMenuItem 
-                className="flex items-center gap-2"
-                onClick={() => onMoveTask(task.id, 'inProgress')}
-                disabled={task.column === 'inProgress'}
-              >
-                In Progress
-              </ContextMenuItem>
-              <ContextMenuItem 
-                className="flex items-center gap-2"
-                onClick={() => onMoveTask(task.id, 'done')}
-                disabled={task.column === 'done'}
-              >
-                Done
-              </ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
-        )}
         
         {onRegenerateAiSuggestions && (
           <ContextMenuItem 
