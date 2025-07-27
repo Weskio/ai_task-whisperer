@@ -17,30 +17,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Priority, Task } from './TaskCard';
+import { Priority, Task, Column } from '@/types';
 
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddTask: (task: Omit<Task, "id" | "aiSuggestions">) => void;
+  onAddTask: (task: Omit<Task, "id" | "aiSuggestions" | "order">) => Promise<void>;
   isLoading: boolean;
+  columns: Column[];
 }
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask, isLoading }) => {
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask, isLoading, columns }) => {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
+  const [selectedColumnId, setSelectedColumnId] = useState(columns[0]?.id || '');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim()) {
-      onAddTask({
+    if (title.trim() && selectedColumnId) {
+      await onAddTask({
         title: title.trim(),
         priority,
-        column: 'todo',
-        subtasks: [], 
+        columnId: selectedColumnId,
+        spaceId: '', // This will be set by the parent component
+        subtasks: [],
       });
       setTitle('');
       setPriority('medium');
+      setSelectedColumnId(columns[0]?.id || '');
     }
   };
 
@@ -84,6 +88,27 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask,
                 <SelectItem value="high">High Priority</SelectItem>
                 <SelectItem value="medium">Medium Priority</SelectItem>
                 <SelectItem value="low">Low Priority</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="column" className="text-sm font-medium">
+              Column
+            </label>
+            <Select 
+              value={selectedColumnId} 
+              onValueChange={setSelectedColumnId}
+              disabled={isLoading}
+            >
+              <SelectTrigger id="column">
+                <SelectValue placeholder="Select column" />
+              </SelectTrigger>
+              <SelectContent>
+                {columns.map((column) => (
+                  <SelectItem key={column.id} value={column.id}>
+                    {column.title}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
