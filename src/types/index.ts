@@ -7,11 +7,23 @@ export interface SubTask {
   completed: boolean;
 }
 
+export type SpaceType = 'tasks' | 'schedule';
+
+export interface ScheduleEntry {
+  id: string;
+  day: string;
+  timeRange: string;
+  activity: string;
+  priority?: number;
+}
+
 export interface Space {
   id: string;
   name: string;
+  type: SpaceType;
   columns: Column[];
   stickyNotes: StickyNote[];
+  scheduleEntries?: ScheduleEntry[];
   createdAt: string;
 }
 
