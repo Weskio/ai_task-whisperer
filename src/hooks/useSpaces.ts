@@ -1,6 +1,6 @@
 
-import { Column, Space } from '@/types';
 import { useState, useEffect } from 'react';
+import { Space, Column, SpaceType } from '@/types';
 import { toast } from 'sonner';
 
 const DEFAULT_COLUMNS: Omit<Column, 'id' | 'spaceId'>[] = [
@@ -13,7 +13,13 @@ const loadSpaces = (): Space[] => {
   const saved = localStorage.getItem('spaces');
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Migrate legacy spaces that don't have type field
+      return parsed.map((space: any) => ({
+        ...space,
+        type: space.type || 'tasks', // Default to 'tasks' for existing spaces
+        scheduleEntries: space.scheduleEntries || undefined
+      }));
     } catch (e) {
       console.error('Failed to parse saved spaces:', e);
     }
@@ -26,6 +32,7 @@ const createDefaultSpace = (): Space => {
   return {
     id: spaceId,
     name: 'Personal',
+    type: 'tasks',
     createdAt: new Date().toISOString(),
     stickyNotes: [],
     columns: DEFAULT_COLUMNS.map((col, index) => ({
@@ -65,23 +72,25 @@ export const useSpaces = () => {
 
   const activeSpace = spaces.find(s => s.id === activeSpaceId);
 
-  const addSpace = (name: string) => {
+  const addSpace = (name: string, type: SpaceType = 'tasks') => {
     const spaceId = `space-${Date.now()}`;
     const newSpace: Space = {
       id: spaceId,
       name,
+      type,
       createdAt: new Date().toISOString(),
       stickyNotes: [],
-      columns: DEFAULT_COLUMNS.map((col, index) => ({
+      scheduleEntries: type === 'schedule' ? [] : undefined,
+      columns: type === 'tasks' ? DEFAULT_COLUMNS.map((col, index) => ({
         ...col,
         id: `col-${spaceId}-${index}`,
         spaceId
-      }))
+      })) : []
     };
     
     setSpaces(prev => [...prev, newSpace]);
     setActiveSpaceId(spaceId);
-    toast.success(`Space "${name}" created`);
+    toast.success(`${type === 'schedule' ? 'Schedule' : 'Task'} space "${name}" created`);
   };
 
   const updateSpace = (spaceId: string, updates: Partial<Omit<Space, 'id'>>) => {
@@ -161,6 +170,12 @@ export const useSpaces = () => {
     }));
   };
 
+  const updateSchedule = (spaceId: string, entries: any[]) => {
+    setSpaces(prev => prev.map(space => 
+      space.id === spaceId ? { ...space, scheduleEntries: entries } : space
+    ));
+  };
+
   return {
     spaces,
     activeSpace,
@@ -172,6 +187,7 @@ export const useSpaces = () => {
     addColumn,
     updateColumn,
     deleteColumn,
-    reorderColumns
+    reorderColumns,
+    updateSchedule
   };
 };
