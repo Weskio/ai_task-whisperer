@@ -9,7 +9,8 @@ import StreakTracker from "@/components/StreakTracker";
 import SpaceTabs from "@/components/SpaceTabs";
 import StickyNote from "@/components/StickyNote";
 import ColumnManager from "@/components/ColumnManager";
-import { Task, Column, StickyNote as StickyNoteType } from "@/types";
+import WeeklySchedule from "@/components/WeeklySchedule";
+import { Task, StickyNote as StickyNoteType } from "@/types";
 import { useSpaces } from "@/hooks/useSpaces";
 import { useEnhancedTasks } from "@/hooks/useEnhancedTasks";
 import { useStickyNotes } from "@/hooks/useStickyNotes";
@@ -27,6 +28,7 @@ const Index = () => {
     updateColumn,
     deleteColumn,
     reorderColumns,
+    updateSchedule,
   } = useSpaces();
 
   const {
@@ -146,7 +148,7 @@ const Index = () => {
         <header className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">AI Task Whisperer</h1>
+              <h1 className="text-3xl font-bold">TaskForge AI</h1>
               <p className="text-muted-foreground mt-1">
                 AI-powered task management with customizable workspaces
               </p>
@@ -164,27 +166,31 @@ const Index = () => {
                   className={`h-4 w-4 ${hasApiKey ? "text-green-500" : ""}`}
                 />
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => addStickyNote(activeSpaceId)}
-                title="Add Sticky Note"
-                className="gap-2"
-              >
-                <StickyNoteIcon className="h-4 w-4" />
-                Add Note
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setRecurringModalOpen(true)}
-                title="Add Recurring Task"
-                className="gap-2"
-              >
-                <Repeat className="h-4 w-4" />
-                Add Recurring
-              </Button>
-              <Button onClick={() => setModalOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" /> Add Task
-              </Button>
+              {activeSpace.type === "tasks" && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => addStickyNote(activeSpaceId)}
+                    title="Add Sticky Note"
+                    className="gap-2"
+                  >
+                    <StickyNoteIcon className="h-4 w-4" />
+                    Add Note
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setRecurringModalOpen(true)}
+                    title="Add Recurring Task"
+                    className="gap-2"
+                  >
+                    <Repeat className="h-4 w-4" />
+                    Add Recurring
+                  </Button>
+                  <Button onClick={() => setModalOpen(true)} className="gap-2">
+                    <Plus className="h-4 w-4" /> Add Task
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </header>
@@ -199,101 +205,121 @@ const Index = () => {
           onDeleteSpace={deleteSpace}
         />
 
-        {/* Streak Tracker */}
-        <div className="mb-8">
-          <StreakTracker
-            completedDates={streakData.completedDates}
-            currentStreak={streakData.currentStreak}
-          />
-        </div>
+        {/* Streak Tracker - Only for task spaces */}
+        {activeSpace.type === "tasks" && (
+          <div className="mb-8">
+            <StreakTracker
+              completedDates={streakData.completedDates}
+              currentStreak={streakData.currentStreak}
+            />
+          </div>
+        )}
 
-        {/* Column Management */}
-        <div className="mb-6 flex justify-end">
-          <ColumnManager
-            columns={activeSpace.columns}
-            onAddColumn={(title, color) =>
-              addColumn(activeSpaceId, title, color)
-            }
-            onUpdateColumn={updateColumn}
-            onDeleteColumn={deleteColumn}
-            onReorderColumns={(from, to) =>
-              reorderColumns(activeSpaceId, from, to)
+        {/* Render based on space type */}
+        {activeSpace.type === "schedule" ? (
+          <WeeklySchedule
+            space={activeSpace}
+            onUpdateSchedule={(entries) =>
+              updateSchedule(activeSpaceId, entries)
             }
           />
-        </div>
-
-        {/* Task Columns */}
-        <div
-          className="grid gap-4 mb-8"
-          style={{
-            gridTemplateColumns: `repeat(${sortedColumns.length}, 1fr)`,
-          }}
-        >
-          {sortedColumns.map((column) => {
-            const columnTasks = tasks
-              .filter((task) => task.columnId === column.id)
-              .sort((a, b) => a.order - b.order);
-
-            return (
-              <TaskColumn
-                key={column.id}
-                title={column.title}
-                tasks={columnTasks}
-                columnId={column.id}
-                color={column.color}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onEditTask={editTask}
-                onToggleSubtask={toggleSubtask}
-                onAddSubtask={addSubtask}
-                onEditSubtask={editSubtask}
-                onDeleteSubtask={deleteSubtask}
-                onDeleteTask={deleteTask}
-                onMoveTask={moveTask}
-                onRegenerateAiSuggestions={regenerateAiSuggestions}
+        ) : (
+          <>
+            {/* Column Management */}
+            <div className="mb-6 flex justify-end">
+              <ColumnManager
+                columns={activeSpace.columns}
+                onAddColumn={(title, color) =>
+                  addColumn(activeSpaceId, title, color)
+                }
+                onUpdateColumn={updateColumn}
+                onDeleteColumn={deleteColumn}
+                onReorderColumns={(from, to) =>
+                  reorderColumns(activeSpaceId, from, to)
+                }
               />
-            );
-          })}
-        </div>
+            </div>
 
-        {/* Sticky Notes - rendered at document level for free movement */}
-        {activeSpace.stickyNotes.map((note) => (
-          <StickyNote
-            key={note.id}
-            note={note}
-            onUpdate={updateStickyNote}
-            onDelete={deleteStickyNote}
-            onStartDrag={startDrag}
-            isDragging={draggedNote?.id === note.id}
-          />
-        ))}
+            {/* Task Columns */}
+            <div
+              className="grid gap-4 mb-8"
+              style={{
+                gridTemplateColumns: `repeat(${sortedColumns.length}, 1fr)`,
+              }}
+            >
+              {sortedColumns.map((column) => {
+                const columnTasks = tasks
+                  .filter((task) => task.columnId === column.id)
+                  .sort((a, b) => a.order - b.order);
 
-        <AddTaskModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onAddTask={(taskData) =>
-            addTask({
-              ...taskData,
-              spaceId: activeSpaceId,
-            })
-          }
-          isLoading={loading}
-          columns={sortedColumns}
-        />
+                return (
+                  <TaskColumn
+                    key={column.id}
+                    title={column.title}
+                    tasks={columnTasks}
+                    columnId={column.id}
+                    color={column.color}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onEditTask={editTask}
+                    onToggleSubtask={toggleSubtask}
+                    onAddSubtask={addSubtask}
+                    onEditSubtask={editSubtask}
+                    onDeleteSubtask={deleteSubtask}
+                    onDeleteTask={deleteTask}
+                    onMoveTask={moveTask}
+                    onRegenerateAiSuggestions={regenerateAiSuggestions}
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
 
-        <AddRecurringTaskModal
-          isOpen={recurringModalOpen}
-          onClose={() => setRecurringModalOpen(false)}
-          onAddTask={(taskData) =>
-            addTask({
-              ...taskData,
-              spaceId: activeSpaceId,
-            })
-          }
-          isLoading={loading}
-          columns={sortedColumns}
-        />
+        {/* Sticky Notes - Only for task spaces */}
+        {activeSpace.type === "tasks" &&
+          activeSpace.stickyNotes.map((note) => (
+            <StickyNote
+              key={note.id}
+              note={note}
+              onUpdate={updateStickyNote}
+              onDelete={deleteStickyNote}
+              onStartDrag={startDrag}
+              isDragging={draggedNote?.id === note.id}
+            />
+          ))}
+
+        {/* Modals - Only for task spaces */}
+        {activeSpace.type === "tasks" && (
+          <>
+            <AddTaskModal
+              isOpen={modalOpen}
+              onClose={() => setModalOpen(false)}
+              onAddTask={(taskData) =>
+                addTask({
+                  ...taskData,
+                  spaceId: activeSpaceId,
+                })
+              }
+              isLoading={loading}
+              columns={sortedColumns}
+            />
+
+            <AddRecurringTaskModal
+              isOpen={recurringModalOpen}
+              onClose={() => setRecurringModalOpen(false)}
+              onAddTask={(taskData) =>
+                addTask({
+                  ...taskData,
+                  spaceId: activeSpaceId,
+                })
+              }
+              isLoading={loading}
+              columns={sortedColumns}
+            />
+          </>
+        )}
 
         <APIKeyModal
           isOpen={apiKeyModalOpen}
